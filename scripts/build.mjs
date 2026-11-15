@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 
 const project = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const version = JSON.parse(fs.readFileSync(path.join(project, 'package.json'), 'utf8')).version;
 const target = process.argv[2];
 const matrix = {
   'monterey-x64': { label: 'Monterey-Intel', minOS: '12.0', electron: '43.8.10', arch: 'x64' },
@@ -42,19 +43,20 @@ try {
   const appSources = path.join(resources, 'app');
   fs.mkdirSync(appSources);
   for (const name of ['main.js', 'bootstrap.js', 'package.json']) fs.copyFileSync(path.join(project, name), path.join(appSources, name));
-  fs.copyFileSync(path.join(project, 'assets', 'legacy.icns'), path.join(resources, 'legacy.icns'));
+  fs.copyFileSync(path.join(project, 'assets', 'rev.png'), path.join(appSources, 'rev.png'));
+  fs.copyFileSync(path.join(project, 'assets', 'rev.icns'), path.join(resources, 'rev.icns'));
   const plist = path.join(builtApp, 'Contents', 'Info.plist');
   const set = (key, value) => execFileSync('/usr/libexec/PlistBuddy', ['-c', `Set :${key} ${value}`, plist], { stdio: 'inherit' });
   set('CFBundleDisplayName', 'REV Hardware Client 2 Legacy Mac');
   set('CFBundleName', 'REV Hardware Client 2 Legacy Mac');
   set('CFBundleIdentifier', 'io.github.shreshtgaming606.rhc2-legacy-mac');
-  set('CFBundleIconFile', 'legacy.icns');
-  set('CFBundleShortVersionString', '0.1.0');
-  set('CFBundleVersion', '1');
+  set('CFBundleIconFile', 'rev.icns');
+  set('CFBundleShortVersionString', version);
+  set('CFBundleVersion', '2');
   set('LSMinimumSystemVersion', spec.minOS);
   execFileSync('/usr/bin/codesign', ['--force', '--deep', '--sign', '-', builtApp], { stdio: 'inherit' });
   execFileSync('/usr/bin/codesign', ['--verify', '--deep', '--strict', builtApp], { stdio: 'inherit' });
-  const output = path.join(dist, `REV-Hardware-Client-2-Legacy-${spec.label}-v0.1.0.zip`);
+  const output = path.join(dist, `REV-Hardware-Client-2-Legacy-${spec.label}-v${version}.zip`);
   execFileSync('/usr/bin/ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', builtApp, output], { stdio: 'inherit' });
   console.log(output);
 } finally {

@@ -1,6 +1,6 @@
 {
   "name": "rhc2-legacy-macos-launcher",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Unofficial launcher for REV Hardware Client 2 on older macOS releases",
   "main": "main.js",

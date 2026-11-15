@@ -12,6 +12,7 @@ const run = promisify(execFile);
 const VERSION = '1.4.6';
 const TEAM_ID = '3MTSGT5M96';
 const DEFAULT_PORT = 52714;
+let activeBackend = null;
 
 function cpuName(arch = process.arch) {
   if (arch === 'x64') return 'amd64';
@@ -139,11 +140,59 @@ function isReady(port) {
   });
 }
 
+function parseRhcProcesses(output) {
+  return output.split('\n').flatMap(line => {
+    const match = line.match(/^\s*(\d+)\s+(.+)$/);
+    if (!match || !match[2].includes('-Dapp.fsname=rev-hardware-client')) return [];
+    const jarFlag = match[2].lastIndexOf(' -jar ');
+    if (jarFlag < 0) return [];
+    const jar = match[2].slice(jarFlag + 6).trim();
+    return jar.endsWith(`server-${VERSION}-runner.jar`) ? [{ pid: Number(match[1]), jar }] : [];
+  });
+}
+
+function runningRhcProcesses() {
+  const output = execFileSync('/bin/ps', ['-axo', 'pid=,command='], { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
+  return parseRhcProcesses(output);
+}
+
+function listeningPorts(pid) {
+  try {
+    const output = execFileSync('/usr/sbin/lsof', ['-nP', '-a', '-p', String(pid), '-iTCP', '-sTCP:LISTEN'], { encoding: 'utf8' });
+    return [...output.matchAll(/127\.0\.0\.1:(\d+)\s+\(LISTEN\)/g)].map(match => Number(match[1]));
+  } catch { return []; }
+}
+
+async function existingBackend(onStatus) {
+  for (const service of runningRhcProcesses()) {
+    if (!fs.existsSync(service.jar)) {
+      onStatus('Stopping an orphaned REV Hardware Client service…');
+      try { process.kill(service.pid, 'SIGTERM'); } catch (error) {
+        if (error.code !== 'ESRCH') throw error;
+      }
+      for (let attempt = 0; attempt < 20; attempt++) {
+        try { process.kill(service.pid, 0); } catch (error) {
+          if (error.code === 'ESRCH') break;
+          throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+      try { process.kill(service.pid, 0); throw new Error('An orphaned REV service did not stop.'); }
+      catch (error) { if (error.code !== 'ESRCH') throw error; }
+      continue;
+    }
+    for (const port of listeningPorts(service.pid)) {
+      if (await isReady(port)) return port;
+    }
+    throw new Error('Another REV Hardware Client service is running, but its interface is unavailable. Quit that service and reopen this launcher.');
+  }
+  return 0;
+}
+
 async function ensureBackend(root, vendorApp, java, onStatus = () => {}) {
   const portFile = path.join(root, 'backend-port');
-  let savedPort = 0;
-  try { savedPort = Number(fs.readFileSync(portFile, 'utf8').trim()); } catch {}
-  for (const port of [savedPort, DEFAULT_PORT]) if (await isReady(port)) return port;
+  const runningPort = await existingBackend(onStatus);
+  if (runningPort) return runningPort;
   const resources = path.join(vendorApp, 'Contents', 'Resources');
   const lib = path.join(vendorApp, 'Contents', 'runtime', 'Contents', 'Home', 'lib');
   const jar = path.join(resources, `server-${VERSION}-runner.jar`);
@@ -185,6 +234,8 @@ async function ensureBackend(root, vendorApp, java, onStatus = () => {}) {
   onStatus('Starting the REV Hardware Client 2 service…');
   const env = { ...process.env, 'revui.bundled-rhc2-ipk': path.join(resources, 'rhc2.ipk') };
   const child = spawn(java, args, { cwd: workdir, env, detached: true, stdio: ['ignore', log, log] });
+  activeBackend = child;
+  child.once('exit', () => { if (activeBackend === child) activeBackend = null; });
   fs.closeSync(log);
   child.unref();
   for (let attempt = 0; attempt < 90; attempt++) {
@@ -204,4 +255,9 @@ async function ensureBackend(root, vendorApp, java, onStatus = () => {}) {
   throw new Error(`The REV service did not become ready. See ${logPath}`);
 }
 
-module.exports = { VERSION, cpuName, vendorURL, verifyVendor, ensureVendor, ensureJava, ensureBackend, findJava, systemJava25, isReady };
+function stopBackend() {
+  if (activeBackend && activeBackend.exitCode === null) activeBackend.kill('SIGTERM');
+  activeBackend = null;
+}
+
+module.exports = { VERSION, cpuName, vendorURL, verifyVendor, ensureVendor, ensureJava, ensureBackend, stopBackend, parseRhcProcesses, findJava, systemJava25, isReady };

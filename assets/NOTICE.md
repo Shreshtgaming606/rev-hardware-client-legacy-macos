@@ -1,0 +1,1 @@
+The `rev.icns` and `rev.png` files are the original REV Hardware Client 2 app icon from REV Robotics. REV Robotics owns its logo and trademarks. The repository's MIT license applies to the launcher code, not these images. This project is unofficial and is not endorsed by REV Robotics.
