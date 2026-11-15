@@ -20,7 +20,7 @@ The launcher does **not** host or redistribute REV's application files. The file
 
 ## Support status
 
-The Sonoma Intel build is the only platform available for local testing so far. Ventura, Monterey, and Apple Silicon builds require on-device testing before they can be called compatible. In particular, device detection and recovery mode have not been validated on those systems. This is an experimental community build and may have limitations that REV's supported app does not.
+The Sonoma Intel backend started locally with both Oracle Java 25 and the downloaded Eclipse Temurin Java 25, and the REV interface rendered in a browser from its local server. The packaged Electron window and hardware functions have not been fully tested. Ventura, Monterey, and Apple Silicon builds have only been built and inspected; they require on-device testing before they can be called compatible. Device detection, ADB, firmware updates, and recovery mode have not been validated for these packages. This is an experimental community build and may have limitations that REV's supported app does not.
 
 These packages are ad hoc signed and are **not notarized by Apple**. They should not be represented as official or fully supported releases.
 

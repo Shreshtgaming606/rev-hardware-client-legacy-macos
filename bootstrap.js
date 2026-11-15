@@ -157,9 +157,11 @@ async function ensureBackend(root, vendorApp, java, onStatus = () => {}) {
   fs.mkdirSync(frontend, { recursive: true });
   const staticLink = path.join(frontend, 'static');
   if (!fs.existsSync(staticLink)) fs.symlinkSync(path.join(resources, 'static'), staticLink, 'dir');
-  const bundled = path.join(root, 'bundled-exes', process.arch === 'arm64' ? 'mac-arm64' : 'mac-x64');
-  fs.mkdirSync(path.dirname(bundled), { recursive: true });
-  if (!fs.existsSync(bundled)) fs.symlinkSync(path.join(vendorApp, 'Contents', 'bin'), bundled, 'dir');
+  for (const arch of ['mac-x64', 'mac-arm64']) {
+    const bundled = path.join(root, 'bundled-exes', arch);
+    fs.mkdirSync(path.dirname(bundled), { recursive: true });
+    if (!fs.existsSync(bundled)) fs.symlinkSync(path.join(vendorApp, 'Contents', 'bin'), bundled, 'dir');
+  }
   const adb = path.join(root, 'adb-exes', 'mac');
   fs.mkdirSync(path.dirname(adb), { recursive: true });
   if (!fs.existsSync(adb)) fs.symlinkSync(path.join(vendorApp, 'Contents', 'bin'), adb, 'dir');
