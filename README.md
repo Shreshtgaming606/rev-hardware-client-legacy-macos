@@ -8,11 +8,13 @@ REV officially supports [macOS 15 Sequoia or newer](https://docs.revrobotics.com
 
 Choose the ZIP for your macOS version and processor. Apple Silicon and Intel are separate builds. All six builds use the same launcher code; Monterey uses an older Electron version that still runs on macOS 12.
 
+[View the v0.1.0 pre-release and checksums](https://github.com/Shreshtgaming606/rev-hardware-client-legacy-macos/releases/tag/v0.1.0).
+
 | macOS | Intel | Apple Silicon |
 | --- | --- | --- |
-| Sonoma 14 | `REV-Hardware-Client-2-Legacy-Sonoma-Intel-v0.1.0.zip` | `REV-Hardware-Client-2-Legacy-Sonoma-Apple-Silicon-v0.1.0.zip` |
-| Ventura 13 | `REV-Hardware-Client-2-Legacy-Ventura-Intel-v0.1.0.zip` | `REV-Hardware-Client-2-Legacy-Ventura-Apple-Silicon-v0.1.0.zip` |
-| Monterey 12 | `REV-Hardware-Client-2-Legacy-Monterey-Intel-v0.1.0.zip` | `REV-Hardware-Client-2-Legacy-Monterey-Apple-Silicon-v0.1.0.zip` |
+| Sonoma 14 | [Download ZIP](https://github.com/Shreshtgaming606/rev-hardware-client-legacy-macos/releases/download/v0.1.0/REV-Hardware-Client-2-Legacy-Sonoma-Intel-v0.1.0.zip) | [Download ZIP](https://github.com/Shreshtgaming606/rev-hardware-client-legacy-macos/releases/download/v0.1.0/REV-Hardware-Client-2-Legacy-Sonoma-Apple-Silicon-v0.1.0.zip) |
+| Ventura 13 | [Download ZIP](https://github.com/Shreshtgaming606/rev-hardware-client-legacy-macos/releases/download/v0.1.0/REV-Hardware-Client-2-Legacy-Ventura-Intel-v0.1.0.zip) | [Download ZIP](https://github.com/Shreshtgaming606/rev-hardware-client-legacy-macos/releases/download/v0.1.0/REV-Hardware-Client-2-Legacy-Ventura-Apple-Silicon-v0.1.0.zip) |
+| Monterey 12 | [Download ZIP](https://github.com/Shreshtgaming606/rev-hardware-client-legacy-macos/releases/download/v0.1.0/REV-Hardware-Client-2-Legacy-Monterey-Intel-v0.1.0.zip) | [Download ZIP](https://github.com/Shreshtgaming606/rev-hardware-client-legacy-macos/releases/download/v0.1.0/REV-Hardware-Client-2-Legacy-Monterey-Apple-Silicon-v0.1.0.zip) |
 
 Unzip the download and move **REV Hardware Client 2 Legacy Mac.app** to `/Applications`. On first run, the launcher downloads the unmodified REV Hardware Client 2 app directly from REV Robotics, checks its code signature, and uses its local backend and interface. It also installs Eclipse Temurin Java 25 in the user's Application Support folder if Java 25 is not already installed. The initial download is several hundred megabytes. An Internet connection is needed for the first run and for REV's update/download features.
 
