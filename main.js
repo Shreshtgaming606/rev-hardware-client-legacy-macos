@@ -1,15 +1,17 @@
 'use strict';
 
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow, dialog, Menu } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { ensureVendor, ensureJava, ensureBackend, stopBackend } = require('./bootstrap');
+const { connectControlHub, stopControlHub } = require('./control-hub');
 
 app.setName('REV Hardware Client 2 Legacy Mac');
 const support = path.join(app.getPath('appData'), 'REV Hardware Client 2 Legacy Mac');
 let window;
 let readyPort = 0;
 let quitting = false;
+let vendorApp;
 const logoPath = fs.existsSync(path.join(__dirname, 'rev.png'))
   ? path.join(__dirname, 'rev.png')
   : path.join(__dirname, 'assets', 'rev.png');
@@ -39,22 +41,46 @@ function createWindow() {
   status('Preparing the app…');
 }
 
-async function start() {
+async function showHardwareClient() {
   if (!window) createWindow();
+  if (!vendorApp) vendorApp = await ensureVendor(support, status);
   if (!readyPort) {
-    const vendorApp = await ensureVendor(support, status);
     const java = await ensureJava(support, status);
     if (quitting) return;
     readyPort = await ensureBackend(support, vendorApp, java, status);
   }
-  if (quitting) { stopBackend(); return; }
-  await window.loadURL(`http://127.0.0.1:${readyPort}/static/`);
+  if (!quitting && window) await window.loadURL(`http://127.0.0.1:${readyPort}/static/`);
+}
+
+async function showControlHub() {
+  if (!window) createWindow();
+  if (!vendorApp) vendorApp = await ensureVendor(support, status);
+  const hub = await connectControlHub(vendorApp, status);
+  if (!hub) return false;
+  if (!quitting && window) await window.loadURL(`http://127.0.0.1:${hub.port}/`);
+  return true;
+}
+
+async function start() {
+  if (!window) createWindow();
+  if (!await showControlHub()) await showHardwareClient();
 }
 
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
-  app.on('before-quit', () => { quitting = true; stopBackend(); });
+  app.on('before-quit', () => { quitting = true; stopBackend(); stopControlHub(); });
   app.on('second-instance', () => window?.focus());
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    { label: app.name, submenu: [{ role: 'about' }, { role: 'quit' }] },
+    { label: 'View', submenu: [
+      { label: 'Open FTC Control Hub Console', click: () => showControlHub().then(found => {
+        if (!found) dialog.showMessageBox(window, { message: 'No FTC Control Hub is connected by USB.', detail: 'Connect the Control Hub USB-C port, then choose this menu item again.' });
+      }).catch(error => dialog.showErrorBox('Control Hub connection failed', String(error.message || error))) },
+      { label: 'Open REV Hardware Client 2', click: () => showHardwareClient().catch(error => dialog.showErrorBox('REV Hardware Client 2 could not start', String(error.message || error))) },
+      { role: 'reload' }
+    ] },
+    { label: 'Window', submenu: [{ role: 'minimize' }, { role: 'close' }] }
+  ]));
   app.whenReady().then(() => start().catch(error => {
     dialog.showErrorBox('REV Hardware Client 2 could not start', String(error.message || error));
     app.quit();

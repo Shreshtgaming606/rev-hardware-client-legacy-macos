@@ -42,7 +42,7 @@ try {
   const resources = path.join(builtApp, 'Contents', 'Resources');
   const appSources = path.join(resources, 'app');
   fs.mkdirSync(appSources);
-  for (const name of ['main.js', 'bootstrap.js', 'package.json']) fs.copyFileSync(path.join(project, name), path.join(appSources, name));
+  for (const name of ['main.js', 'bootstrap.js', 'control-hub.js', 'package.json']) fs.copyFileSync(path.join(project, name), path.join(appSources, name));
   fs.copyFileSync(path.join(project, 'assets', 'rev.png'), path.join(appSources, 'rev.png'));
   fs.copyFileSync(path.join(project, 'assets', 'rev.icns'), path.join(resources, 'rev.icns'));
   const plist = path.join(builtApp, 'Contents', 'Info.plist');

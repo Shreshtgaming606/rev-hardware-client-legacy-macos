@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { cpuName, vendorURL, findJava, isReady, parseRhcProcesses } = require('./bootstrap');
+const { parseControlHubs } = require('./control-hub');
 
 test('vendor downloads match each Mac processor', () => {
   assert.equal(cpuName('x64'), 'amd64');
@@ -24,4 +25,11 @@ test('recognizes a REV backend whose app path contains spaces', () => {
     jar: '/Applications/REV Hardware Client 2.app/Contents/Resources/server-1.4.6-runner.jar'
   }]);
   assert.deepEqual(parseRhcProcesses('100 /bin/other -jar /tmp/server-1.4.6-runner.jar'), []);
+});
+
+test('recognizes an FTC Control Hub on USB through ADB', () => {
+  const listing = 'List of devices attached\n6b3b42fa5163b048 device usb:337776640X product:ch_v1_box model:Control_Hub_v1_0 device:rk3328_box transport_id:1\n'
+    + '192.168.43.1:5555 device product:ch_v1_box model:Control_Hub_v1_0\n'
+    + 'ABC123 unauthorized usb:42 model:Control_Hub_v1_0\n';
+  assert.deepEqual(parseControlHubs(listing), ['6b3b42fa5163b048']);
 });
